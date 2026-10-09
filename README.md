@@ -39,7 +39,7 @@ ln -s /var/db/repos/starfarer/patches /etc/portage/patches
 | Path | What |
 |---|---|
 | `sys-apps/portage/portage-direct-deps-only.patch` | Scheduler parallelism fix, see below. |
-| `x11-terms/st/*` | suckless scrollback (ringbuffer, mouse, altscreen) and blinking cursor patches, plus a gruvbox palette. |
+| `x11-terms/st/st-0.9.3-scrollback-ringbuffer-mouse-blink.diff` | suckless scrollback (ringbuffer, mouse, altscreen) and blinking cursor patches, rebased into one patch for st 0.9.3 (applies with fuzz 0). Output no longer snaps a scrolled-back view to the bottom: the view stays on the same lines, and typing returns to the bottom. Use an unversioned savedconfig (`/etc/portage/savedconfig/x11-terms/st`) so your config survives version bumps. |
 | `media-sound/cantata/cantata-modified-column.patch` | "Modified" play queue column, plus sort by length, disc and original year. |
 | `media-sound/cantata-3.3.0/qregularexpression-streamsmodel.patch` | Missing `QRegularExpression` include. |
 | `games-util/lutris/no_webkit.patch` | Lets Lutris run without WebKit (disables web-login services). |
