@@ -1,0 +1,18 @@
+--- a/lib/_emerge/Scheduler.py	2026-10-09 22:33:12.520057613 +0600
++++ b/lib/_emerge/Scheduler.py	2026-10-09 22:33:12.529057685 +0600
+@@ -1889,10 +1889,11 @@
+                 dependent = True
+                 break
+ 
+-            # Don't traverse children of uninstall nodes since
+-            # those aren't dependencies in the usual sense.
+-            if node.operation != "uninstall":
+-                node_stack.extend(graph.child_nodes(node))
++            # Local patch: only direct dependencies gate scheduling. Deep
++            # dependencies of installed/completed packages are already
++            # satisfied by what is installed; walking through them makes
++            # whole dependency cycles (e.g. glibc <-> perl modules) build
++            # one at a time regardless of --jobs.
+ 
+         return dependent
+ 

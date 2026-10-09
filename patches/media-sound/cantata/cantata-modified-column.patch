@@ -1,0 +1,148 @@
+--- a/models/playqueuemodel.h	2025-04-25 12:56:55.000000000 +0600
++++ b/models/playqueuemodel.h	2026-08-19 21:47:08.528674340 +0600
+@@ -62,6 +62,7 @@
+ 		COL_RATING,
+ 		COL_FILENAME,
+ 		COL_PATH,
++		COL_MODIFIED,
+ 
+ 		COL_COUNT
+ 	};
+--- a/models/playqueuemodel.cpp	2025-04-25 12:56:55.000000000 +0600
++++ b/models/playqueuemodel.cpp	2026-08-19 21:55:51.127651609 +0600
+@@ -25,6 +25,7 @@
+  */
+ 
+ #include "playqueuemodel.h"
++#include <QDateTime>
+ #include "config.h"
+ #include "gui/covers.h"
+ #include "gui/settings.h"
+@@ -85,6 +86,10 @@
+ static const QLatin1String constSortByNumberKey("track");
+ static const QLatin1String constSortByPathKey("path");
+ static const QLatin1String constSortByGrouping("grouping");
++static const QLatin1String constSortByModifiedKey("modified");
++static const QLatin1String constSortByLengthKey("length");
++static const QLatin1String constSortByDiscKey("disc");
++static const QLatin1String constSortByOrigYearKey("origyear");
+ 
+ static QSet<QString> constM3uPlaylists = QSet<QString>() << QLatin1String("m3u") << QLatin1String("m3u8");
+ static const QString constPlsPlaylist = QLatin1String("pls");
+@@ -404,6 +409,7 @@
+ 	case COL_RATING: return tr("Rating");
+ 	case COL_FILENAME: return tr("Filename");
+ 	case COL_PATH: return tr("Path");
++	case COL_MODIFIED: return tr("Modified");
+ 	default: return QString();
+ 	}
+ }
+@@ -472,6 +478,10 @@
+ 	addSortAction(tr("Performer"), constSortByPerformerKey);
+ 	addSortAction(tr("Path"), constSortByPathKey);
+ 	addSortAction(tr("Grouping"), constSortByGrouping);
++	addSortAction(tr("Length"), constSortByLengthKey);
++	addSortAction(tr("Disc"), constSortByDiscKey);
++	addSortAction(tr("Original Year"), constSortByOrigYearKey);
++	addSortAction(tr("Modified"), constSortByModifiedKey);
+ 	controlActions();
+ 	shuffleAction->setEnabled(false);
+ 	sortAction->setEnabled(false);
+@@ -480,6 +490,7 @@
+ 	alignments[COL_TRACK] = alignments[COL_LENGTH] = alignments[COL_DISC] = alignments[COL_YEAR] = alignments[COL_ORIGYEAR] =
+ 			alignments[COL_PRIO] = int(Qt::AlignVCenter | Qt::AlignRight);
+ 	alignments[COL_RATING] = int(Qt::AlignVCenter | Qt::AlignHCenter);
++	alignments[COL_MODIFIED] = int(Qt::AlignVCenter | Qt::AlignRight);
+ }
+ 
+ PlayQueueModel::~PlayQueueModel()
+@@ -527,6 +538,7 @@
+ 			case COL_RATING: return 0.08;
+ 			case COL_FILENAME: return 0.27;
+ 			case COL_PATH: return 0.27;
++			case COL_MODIFIED: return 0.12;
+ 			}
+ 			break;
+ 		case Cantata::Role_ContextMenuText:
+@@ -780,6 +792,8 @@
+ 			QString dir = Utils::getDir(QUrl(song.file).path());
+ 			return dir.endsWith("/") ? dir.left(dir.length() - 1) : dir;
+ 		}
++		case COL_MODIFIED:
++			return song.lastModified > 0 ? QVariant(QDateTime::fromSecsSinceEpoch(song.lastModified).toString(QStringLiteral("yyyy-MM-dd HH:mm"))) : QVariant();
+ 		default:
+ 			break;
+ 		}
+@@ -1511,6 +1525,42 @@
+ 	return c || (s1->year == s2->year && (*s1) < (*s2));
+ }
+ 
++static bool modifiedSort(const Song* s1, const Song* s2)
++{
++	bool c = s1->lastModified < s2->lastModified;
++	if (Settings::self()->playQueueSimpleSort()) {
++		return c;
++	}
++	return c || (s1->lastModified == s2->lastModified && (*s1) < (*s2));
++}
++
++static bool lengthSort(const Song* s1, const Song* s2)
++{
++	bool c = s1->time < s2->time;
++	if (Settings::self()->playQueueSimpleSort()) {
++		return c;
++	}
++	return c || (s1->time == s2->time && (*s1) < (*s2));
++}
++
++static bool discSort(const Song* s1, const Song* s2)
++{
++	bool c = s1->disc < s2->disc;
++	if (Settings::self()->playQueueSimpleSort()) {
++		return c;
++	}
++	return c || (s1->disc == s2->disc && (*s1) < (*s2));
++}
++
++static bool origYearSort(const Song* s1, const Song* s2)
++{
++	bool c = s1->origYear < s2->origYear;
++	if (Settings::self()->playQueueSimpleSort()) {
++		return c;
++	}
++	return c || (s1->origYear == s2->origYear && (*s1) < (*s2));
++}
++
+ static bool titleSort(const Song* s1, const Song* s2)
+ {
+ 	int c = collator.compare(s1->title, s2->title);
+@@ -1582,6 +1632,18 @@
+ 		else if (constSortByGrouping == key) {
+ 			std::stable_sort(copy.begin(), copy.end(), groupingSort);
+ 		}
++		else if (constSortByModifiedKey == key) {
++			std::stable_sort(copy.begin(), copy.end(), modifiedSort);
++		}
++		else if (constSortByLengthKey == key) {
++			std::stable_sort(copy.begin(), copy.end(), lengthSort);
++		}
++		else if (constSortByDiscKey == key) {
++			std::stable_sort(copy.begin(), copy.end(), discSort);
++		}
++		else if (constSortByOrigYearKey == key) {
++			std::stable_sort(copy.begin(), copy.end(), origYearSort);
++		}
+ 
+ 		QList<quint32> positions;
+ 		for (const Song* s : copy) {
+--- a/mpd-interface/mpdparseutils.cpp	2025-04-25 12:56:55.000000000 +0600
++++ b/mpd-interface/mpdparseutils.cpp	2026-08-19 21:53:08.848259703 +0600
+@@ -393,7 +393,7 @@
+ 		else if (line.startsWith(constAlbumId)) {
+ 			song.setMbAlbumId(line.mid(constAlbumId.length()));
+ 		}
+-		else if ((Loc_Search == location || Loc_Library == location) && line.startsWith(constLastModifiedKey)) {
++		else if ((Loc_Search == location || Loc_Library == location || Loc_PlayQueue == location) && line.startsWith(constLastModifiedKey)) {
+ 			song.lastModified = QDateTime::fromString(QString::fromUtf8(line.mid(constLastModifiedKey.length())), Qt::ISODate).toSecsSinceEpoch();
+ 		}
+ 		else if ((Loc_Search == location || Loc_Playlists == location || Loc_PlayQueue == location) && line.startsWith(constPerformerKey)) {

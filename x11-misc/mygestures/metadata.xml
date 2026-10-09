@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>astarfarer@proton.me</email>
+		<name>thestarfarer</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">deters/mygestures</remote-id>
+	</upstream>
+</pkgmetadata>

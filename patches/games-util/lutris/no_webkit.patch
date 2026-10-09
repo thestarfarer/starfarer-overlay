@@ -1,0 +1,20 @@
+--- a/lutris/services/base.py	2026-06-07 21:52:08.809788175 +0600
++++ b/lutris/services/base.py	2026-06-07 21:52:08.803788100 +0600
+@@ -16,7 +16,7 @@
+ from lutris.database.services import ServiceGameCollection
+ from lutris.game import GAME_UPDATED, Game
+ from lutris.gui.dialogs import NoticeDialog
+-from lutris.gui.dialogs.webconnect_dialog import WebConnectDialog
++#from lutris.gui.dialogs.webconnect_dialog import WebConnectDialog
+ from lutris.gui.views.media_loader import download_media
+ from lutris.gui.widgets import NotificationSource
+ from lutris.gui.widgets.utils import BANNER_SIZE, ICON_SIZE
+@@ -436,7 +436,7 @@
+     login_url = NotImplemented
+     login_window_width = 390
+     login_window_height = 500
+-    login_user_agent = settings.DEFAULT_USER_AGENT
++    #login_user_agent = settings.DEFAULT_USER_AGENT
+     redirect_uris = NotImplemented
+ 
+     @property

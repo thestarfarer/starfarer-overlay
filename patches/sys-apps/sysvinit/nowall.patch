@@ -1,0 +1,12 @@
+diff --git a/src/shutdown.c b/src/shutdown.c
+index 89b63a5..c190e2c 100644
+--- a/src/shutdown.c
++++ b/src/shutdown.c
+@@ -249,7 +249,6 @@ void issue_warn(int mins)
+   		snprintf(buf + len, sizeof(buf) - len,
+ 			"\rThe system is going DOWN %s in %d minute%s!\r\n",
+ 				newstate, mins, mins == 1 ? "" : "s");
+-	wall(buf, 0);
+ }
+ 
+ /*
